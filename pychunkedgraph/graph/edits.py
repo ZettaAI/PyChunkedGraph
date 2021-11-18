@@ -141,7 +141,7 @@ def check_fake_edges(
             )
         )
         assert len(roots) == 2, "edges must be from 2 roots"
-        print("found inactive", len(inactive_edges))
+        # print("found inactive", len(inactive_edges))
         return inactive_edges, []
 
     rows = []
@@ -176,7 +176,7 @@ def check_fake_edges(
                 time_stamp=time_stamp,
             )
         )
-    print("no inactive", len(atomic_edges))
+    # print("no inactive", len(atomic_edges))
     return atomic_edges, rows
 
 

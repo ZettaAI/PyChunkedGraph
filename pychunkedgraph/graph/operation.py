@@ -622,6 +622,7 @@ class MergeOperation(GraphEditOperation):
                 time_stamp=timestamp,
                 parent_ts=self.parent_ts,
             )
+            return atomic_edges, rows
             return edits.add_edges(
                 self.cg,
                 atomic_edges=atomic_edges,

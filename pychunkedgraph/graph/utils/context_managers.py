@@ -24,7 +24,7 @@ class TimeIt:
 
     def __enter__(self):
         builtins.print = foo
-        print(f"start {self._message}")
+        # print(f"start {self._message}")
         global indent
         indent += 2
         if self._args:
@@ -39,5 +39,5 @@ class TimeIt:
         builtins.print = foo
         global indent
         indent -= 2
-        print(f"end {self._message} -- {time()-self._start}")
+        # print(f"end {self._message} -- {time()-self._start}")
         builtins.print = builtin_print
