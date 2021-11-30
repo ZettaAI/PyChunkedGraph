@@ -1,56 +1,17 @@
-from messagingclient import MessagingClient
+import os
 
+# This is for monitoring rq with supervisord
+# For the flask app use a config class
 
-def callback(payload):
-    from datetime import timedelta
-    from pychunkedgraph.graph import ChunkedGraph
-    from pychunkedgraph.graph.operation import GraphEditOperation
-    from pychunkedgraph.graph.operation import MergeOperation
-    from pychunkedgraph.graph.attributes import OperationLogs
-    from pychunkedgraph.utils.redis import get_redis_connection
-    from pychunkedgraph.graph.exceptions import PreconditionError
+from pychunkedgraph.utils.redis import REDIS_URL
 
-    redis = get_redis_connection()
+# Queues to listen on
+QUEUES = ["fake"]
 
-    operation_id = int(payload.data.decode())
-    graph_id = payload.attributes["graph_id"]
-    cg = ChunkedGraph(graph_id=graph_id)
+# If you're using Sentry to collect your runtime exceptions, you can use this
+# to configure RQ for it in a single step
+# The 'sync+' prefix is required for raven: https://github.com/nvie/rq/issues/350#issuecomment-43592410
+# SENTRY_DSN = 'sync+http://public:secret@example.com/1'
 
-    try:
-        log, ts = cg.client.read_log_entry(operation_id)
-        if not log:
-            return
-    except Exception:
-        redis.hset("errors", f"{operation_id}", "")
-        return
-
-    try:
-        op = GraphEditOperation.from_log_record(cg, log)
-    except Exception:
-        redis.hset("errors", f"{operation_id}", "")
-        return
-
-    ts = ts - timedelta(milliseconds=500)
-    op.parent_ts = ts
-
-    try:
-        status = log[OperationLogs.Status]
-    except KeyError:
-        status = 0
-
-    if not isinstance(op, MergeOperation) or status:
-        return
-
-    try:
-        _, rows = op._apply(operation_id=operation_id, timestamp=ts)
-    except PreconditionError:
-        redis.hset("merge_errors", f"{operation_id}", "")
-        return
-
-    if len(rows):
-        cg.client.write(rows)
-        redis.incr("fake_edge_chunks", amount=1)
-
-
-c = MessagingClient()
-c.consume("fake-edges", callback)
+# If you want custom worker name
+# NAME = 'worker-1024'
